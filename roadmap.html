@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roadmap — ТехноИнноПарк | AI Career</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{display:['Unbounded','Manrope','sans-serif'],sans:['Manrope','system-ui','sans-serif']}}}}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0F172A;--indigo:#4F46E5;--cyan:#22D3EE}
+body{background:var(--bg);color:#e2e8f0;font-family:Manrope,system-ui,sans-serif}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(60rem 30rem at 15% -10%,rgba(79,70,229,.35),transparent),radial-gradient(40rem 25rem at 90% 10%,rgba(34,211,238,.16),transparent)}
+.glass{background:rgba(30,41,59,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.09)}
+.nav-link{color:#94a3b8;font-size:.875rem;padding:.5rem .75rem;position:relative;transition:color .2s}
+.nav-link:hover{color:#fff}.nav-link.is-active{color:#67e8f9}
+.nav-link.is-active::after{content:"";position:absolute;left:.75rem;right:.75rem;bottom:-1px;height:2px;border-radius:2px;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+#mnav .nav-link.is-active::after{display:none}
+.lang-btn{font-size:.75rem;padding:.35rem .55rem;border-radius:.5rem;color:#94a3b8}
+.lang-btn[aria-pressed=true]{background:var(--indigo);color:#fff}
+.skeleton{position:relative;overflow:hidden;background:rgba(148,163,184,.12);border-radius:.5rem}
+.skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);animation:sh 1.2s infinite}
+@keyframes sh{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.lift{transition:transform .25s,border-color .25s}.lift:hover{transform:translateY(-3px);border-color:rgba(34,211,238,.5)}
+.btn{padding:.6rem 1.1rem;border-radius:.75rem;font-weight:600;background:linear-gradient(90deg,#6366f1,#22D3EE);color:#020617}
+.btn:hover{filter:brightness(1.1)}.btn-g{padding:.6rem 1.1rem;border-radius:.75rem}
+.chip{font-size:.75rem;padding:.2rem .6rem;border-radius:999px;border:1px solid rgba(255,255,255,.15)}
+.inp{background:rgba(15,23,42,.7);border:1px solid rgba(255,255,255,.12);border-radius:.6rem;padding:.55rem .75rem;width:100%;color:#e2e8f0}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+
+<body><div id="hdr"></div>
+<main class="pt-24 max-w-5xl mx-auto px-4 space-y-6">
+ <h1 class="font-display text-2xl sm:text-3xl" data-i18n="title"></h1>
+ <div id="tracks" class="flex flex-wrap gap-2" role="tablist"></div>
+ <div class="glass rounded-2xl p-5"><div class="flex justify-between text-sm mb-2"><span data-i18n="prog"></span><span id="pct" class="font-display text-cyan-300"></span></div><div class="h-3 rounded-full bg-slate-700/60"><div id="pbar" class="h-3 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400" style="transition:width .4s"></div></div></div>
+ <ol id="tl" class="relative border-l-2 border-white/10 ml-3 space-y-5"></ol>
+ <section id="added" class="glass rounded-2xl p-5 hidden"><h2 class="font-semibold mb-3"><i class="fa-solid fa-bolt text-amber-400 mr-2"></i><span data-i18n="added"></span></h2><ul id="addl" class="space-y-2 text-sm"></ul></section>
+</main>
+<div id="ftr" class="mt-16"></div>
+<script>
+/* AI Career — общий слой: i18n (RU/KK/EN), единые Header/Footer, тосты.
+   Встроен в каждую страницу. */
+(function () {
+  const D = {
+    ru: { nav_home: 'Главная', nav_dash: 'Кабинет', nav_resume: 'Анализ резюме', nav_roadmap: 'Roadmap', nav_jobs: 'Вакансии',
+      login: 'Вход', start: 'Запустить ИИ-анализ', login_toast: 'Вход через портал ТехноИнноПарка скоро будет доступен',
+      f_about: 'Экосистема профориентации и карьерного трекинга студентов.', f_nav: 'Разделы', f_contact: 'Контакты', f_rights: '© 2026 ТехноИнноПарк. Все права защищены.' },
+    kk: { nav_home: 'Басты бет', nav_dash: 'Кабинет', nav_resume: 'Резюме талдауы', nav_roadmap: 'Roadmap', nav_jobs: 'Вакансиялар',
+      login: 'Кіру', start: 'ЖИ-талдауды бастау', login_toast: 'ТехноИнноПарк порталы арқылы кіру жақында қолжетімді болады',
+      f_about: 'Студенттерге арналған кәсіби бағдар және мансап трекингі экожүйесі.', f_nav: 'Бөлімдер', f_contact: 'Байланыс', f_rights: '© 2026 ТехноИнноПарк. Барлық құқықтар қорғалған.' },
+    en: { nav_home: 'Home', nav_dash: 'Dashboard', nav_resume: 'Resume Lab', nav_roadmap: 'Roadmap', nav_jobs: 'Jobs',
+      login: 'Sign in', start: 'Run AI analysis', login_toast: 'Sign-in via the TechnoInnoPark portal is coming soon',
+      f_about: 'A career guidance and tracking ecosystem for students.', f_nav: 'Sections', f_contact: 'Contact', f_rights: '© 2026 TechnoInnoPark. All rights reserved.' }
+  };
+  const LOCALES = { ru: 'ru-RU', kk: 'kk-KZ', en: 'en-GB' };
+  const PAGES = [['index.html', 'nav_home'], ['dashboard.html', 'nav_dash'], ['resume-analyzer.html', 'nav_resume'], ['roadmap.html', 'nav_roadmap'], ['vacancies.html', 'nav_jobs']];
+  let lang = 'ru';
+  try { lang = localStorage.getItem('aic_lang') || 'ru'; } catch (e) {}
+  if (!D[lang]) lang = 'ru';
+
+  const AI = {
+    get lang() { return lang; },
+    get locale() { return LOCALES[lang]; },
+    add(dict) { for (const l in dict) Object.assign(D[l], dict[l]); },
+    t(k) { return (D[lang] && D[lang][k]) || D.ru[k] || k; },
+    apply(root) {
+      (root || document).querySelectorAll('[data-i18n]').forEach(el => { el.textContent = AI.t(el.dataset.i18n); });
+      document.documentElement.lang = lang;
+    },
+    setLang(l) {
+      lang = l;
+      try { localStorage.setItem('aic_lang', l); } catch (e) {}
+      document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === l));
+      AI.apply();
+      document.dispatchEvent(new CustomEvent('langchange', { detail: l }));
+    },
+    toast(msg, type) {
+      let box = document.getElementById('toasts');
+      if (!box) { box = document.createElement('div'); box.id = 'toasts'; box.className = 'fixed bottom-5 right-5 z-[100] flex flex-col gap-2'; document.body.appendChild(box); }
+      const el = document.createElement('div');
+      el.className = 'glass rounded-xl px-4 py-3 text-sm flex items-center gap-3 shadow-2xl transition-all duration-300 translate-y-2 opacity-0 max-w-xs';
+      el.innerHTML = '<i class="fa-solid ' + (type === 'error' ? 'fa-circle-exclamation text-rose-400' : 'fa-circle-check text-cyan-300') + '"></i><span></span>';
+      el.lastChild.textContent = msg;
+      box.appendChild(el);
+      requestAnimationFrame(() => el.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => { el.classList.add('opacity-0'); setTimeout(() => el.remove(), 300); }, 3200);
+    },
+    init(active) {
+      const links = (cls) => PAGES.map(([h, k]) =>
+        '<a href="' + h + '" data-i18n="' + k + '" class="' + cls + (h === active ? ' is-active' : '') + '"' + (h === active ? ' aria-current="page"' : '') + '></a>').join('');
+      const langs = ['ru', 'kk', 'en'].map((l, i) => '<button data-lang="' + l + '" aria-pressed="' + (l === lang) + '" class="lang-btn" title="' + ['Русский', 'Қазақша', 'English'][i] + '">' + ['🇷🇺 RU', '🇰🇿 KK', '🇬🇧 EN'][i] + '</button>').join('');
+      document.getElementById('hdr').innerHTML =
+        '<header class="fixed top-0 inset-x-0 z-50 glass border-x-0 border-t-0"><div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">' +
+        '<a href="index.html" class="flex items-center gap-2 font-display font-semibold shrink-0"><span class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-400 grid place-items-center text-slate-950"><i class="fa-solid fa-microchip"></i></span><span class="hidden sm:inline">ТехноИнноПарк <span class="text-slate-500">|</span> <span class="text-cyan-300">AI Career</span></span></a>' +
+        '<nav class="hidden lg:flex items-center gap-1 mx-auto">' + links('nav-link') + '</nav>' +
+        '<div class="ml-auto flex items-center gap-2"><div class="flex rounded-lg bg-slate-900/70 p-0.5">' + langs + '</div>' +
+        '<button id="login-btn" class="hidden md:block px-3 py-2 text-sm text-slate-300 hover:text-white" data-i18n="login"></button>' +
+        '<a href="resume-analyzer.html" class="hidden md:block px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950 hover:brightness-110" data-i18n="start"></a>' +
+        '<button id="burger" class="lg:hidden w-10 h-10 rounded-lg bg-slate-900/70" aria-label="Menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button></div></div>' +
+        '<nav id="mnav" class="hidden lg:hidden px-4 pb-4 flex-col gap-1">' + links('block px-3 py-2 rounded-lg nav-link') + '</nav></header>';
+      document.getElementById('ftr').innerHTML =
+        '<footer class="border-t border-white/10 mt-24"><div class="max-w-7xl mx-auto px-4 py-12 grid gap-8 md:grid-cols-3 text-sm text-slate-400">' +
+        '<div><div class="font-display text-white mb-2">ТехноИнноПарк | AI Career</div><p data-i18n="f_about"></p></div>' +
+        '<div><div class="text-white mb-2" data-i18n="f_nav"></div><div class="flex flex-col gap-1">' + links('hover:text-cyan-300') + '</div></div>' +
+        '<div><div class="text-white mb-2" data-i18n="f_contact"></div><p>Kokshetau, Kazakhstan</p><p>career@technoinnopark.example</p></div></div>' +
+        '<div class="text-center text-xs text-slate-500 pb-8" data-i18n="f_rights"></div></footer>';
+      document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => AI.setLang(b.dataset.lang)));
+      document.getElementById('login-btn').addEventListener('click', () => AI.toast(AI.t('login_toast')));
+      const burger = document.getElementById('burger'), mnav = document.getElementById('mnav');
+      burger.addEventListener('click', () => { const open = mnav.classList.toggle('hidden') === false; mnav.classList.toggle('flex', open); burger.setAttribute('aria-expanded', open); });
+      AI.apply();
+    }
+  };
+  window.AI = AI;
+})();
+</script>
+<script>
+AI.add({ru:{title:'Карьерный трекер AI Pathfinder',prog:'Прогресс трека',month:'Месяц',added:'Добавлено из вакансий',internal:'Внутреннее задание ТехноИнноПарка откроется после входа',open:'Открыть материал'},
+kk:{title:'AI Pathfinder мансап трекері',prog:'Трек прогресі',month:'Ай',added:'Вакансиялардан қосылған',internal:'ТехноИнноПарк ішкі тапсырмасы кіргеннен кейін ашылады',open:'Материалды ашу'},
+en:{title:'AI Pathfinder career tracker',prog:'Track progress',month:'Month',added:'Added from vacancies',internal:'Internal TechnoInnoPark task opens after sign-in',open:'Open material'}});
+AI.init('roadmap.html');
+const T={
+'DevOps Engineer':[['Linux & Bash — roadmap.sh|https://roadmap.sh/devops','Pro Git book|https://git-scm.com/book'],['Docker: Get started|https://docs.docker.com/get-started/','Lab ТехноИнноПарка: containerization|#'],['GitHub Actions docs|https://docs.github.com/en/actions','CI/CD project (Technopark)|#'],['Kubernetes tutorials|https://kubernetes.io/docs/tutorials/','Terraform tutorials|https://developer.hashicorp.com/terraform/tutorials'],['Prometheus overview|https://prometheus.io/docs/introduction/overview/','Grafana dashboards lab|#'],['Deploy a partner service (Technopark)|#','Resume check|resume-analyzer.html']],
+'Full-Stack Python/React':[['Python tutorial|https://docs.python.org/3/tutorial/','Pro Git book|https://git-scm.com/book'],['FastAPI tutorial|https://fastapi.tiangolo.com/tutorial/','PostgreSQL tutorial|https://www.postgresql.org/docs/current/tutorial.html'],['React: Learn|https://react.dev/learn','TypeScript handbook|https://www.typescriptlang.org/docs/handbook/intro.html'],['Docker: Get started|https://docs.docker.com/get-started/','REST API project (Technopark)|#'],['pytest docs|https://docs.pytest.org/','Playwright intro|https://playwright.dev/docs/intro'],['Capstone with a partner (Technopark)|#','Resume check|resume-analyzer.html']],
+'ML Engineer':[['NumPy: Learn|https://numpy.org/learn/','Kaggle: Python|https://www.kaggle.com/learn/python'],['Kaggle: Pandas|https://www.kaggle.com/learn/pandas','Kaggle: Intro to ML|https://www.kaggle.com/learn/intro-to-machine-learning'],['scikit-learn tutorials|https://scikit-learn.org/stable/tutorial/index.html','ML Specialization (Coursera)|https://www.coursera.org/specializations/machine-learning-introduction'],['PyTorch tutorials|https://pytorch.org/tutorials/','Kaggle: Deep learning|https://www.kaggle.com/learn/intro-to-deep-learning'],['MLflow docs|https://mlflow.org/docs/latest/','Model serving lab|#'],['Kaggle competition|https://www.kaggle.com/competitions','Capstone (Technopark)|#']],
+'CyberSecurity':[['TryHackMe: Pre Security|https://tryhackme.com/path/outline/presecurity','Linux basics|https://roadmap.sh/linux'],['OWASP Top 10|https://owasp.org/www-project-top-ten/','PortSwigger Web Security Academy|https://portswigger.net/web-security'],['Python for security tasks|https://docs.python.org/3/tutorial/','CTF lab (Technopark)|#'],['Nmap book|https://nmap.org/book/','Wireshark docs|https://www.wireshark.org/docs/'],['NIST SP 800-61 incident response|https://csrc.nist.gov/pubs/sp/800/61/r2/final','SIEM lab|#'],['Pentest report project (Technopark)|#','Mock interview|#']]};
+const $=id=>document.getElementById(id);let tr=localStorage.getItem('aic_track')||'DevOps Engineer',ST={};
+try{ST=JSON.parse(localStorage.getItem('aic_checks')||'{}')}catch(e){}
+const save=()=>localStorage.setItem('aic_checks',JSON.stringify(ST));
+function calc(){const all=[...document.querySelectorAll('#tl input')];const n=all.filter(i=>i.checked).length;const p=Math.round(n/all.length*100);$('pct').textContent=p+'% ('+n+'/'+all.length+')';$('pbar').style.width=p+'%';
+ document.querySelectorAll('#tl > li').forEach(li=>{const c=[...li.querySelectorAll('input')];const d=c.every(i=>i.checked);li.querySelector('.dot').className='dot absolute -left-[0.95rem] top-5 w-6 h-6 rounded-full grid place-items-center text-xs '+(d?'bg-emerald-400 text-slate-900':'bg-slate-700')});}
+function draw(){
+ $('tracks').innerHTML=Object.keys(T).map(k=>`<button role="tab" aria-selected="${k===tr}" data-k="${k}" class="px-4 py-2 rounded-xl glass text-sm ${k===tr?'border-cyan-400 bg-cyan-400/10 text-cyan-200':''}">${k}</button>`).join('');
+ $('tracks').querySelectorAll('button').forEach(b=>b.onclick=()=>{tr=b.dataset.k;localStorage.setItem('aic_track',tr);draw();AI.toast(tr)});
+ $('tl').innerHTML=T[tr].map((m,i)=>`<li class="pl-8 relative"><span class="dot"></span><div class="glass rounded-2xl p-5 lift"><h3 class="font-semibold mb-3">${AI.t('month')} ${i+1}</h3><ul class="space-y-2">${m.map((s,j)=>{const[t,u]=s.split('|'),id=tr+i+j,int=u==='#';
+  return `<li class="flex items-start gap-3 text-sm"><input type="checkbox" id="${id}" class="mt-1 accent-cyan-400 w-4 h-4" ${ST[id]?'checked':''}><label for="${id}" class="flex-1">${t}</label><a href="${u}" ${int?'data-int':u.startsWith('http')?'target="_blank" rel="noopener"':''} class="text-cyan-300 text-xs shrink-0" aria-label="${AI.t('open')}"><i class="fa-solid ${int?'fa-building':'fa-arrow-up-right-from-square'}"></i></a></li>`}).join('')}</ul></div></li>`).join('');
+ $('tl').querySelectorAll('input').forEach(i=>i.onchange=()=>{ST[i.id]=i.checked;save();calc()});
+ $('tl').querySelectorAll('[data-int]').forEach(a=>a.onclick=e=>{e.preventDefault();AI.toast(AI.t('internal'))});
+ const A=JSON.parse(localStorage.getItem('aic_added')||'[]');$('added').classList.toggle('hidden',!A.length);
+ $('addl').innerHTML=A.map(s=>`<li class="flex gap-3"><input type="checkbox" id="add-${s}" class="accent-cyan-400 w-4 h-4 mt-0.5" ${ST['add-'+s]?'checked':''}><label for="add-${s}">${s}</label></li>`).join('');
+ $('addl').querySelectorAll('input').forEach(i=>i.onchange=()=>{ST[i.id]=i.checked;save()});
+ calc();}
+document.addEventListener('langchange',draw);draw();
+</script></body></html>

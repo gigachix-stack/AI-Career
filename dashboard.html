@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — ТехноИнноПарк | AI Career</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{display:['Unbounded','Manrope','sans-serif'],sans:['Manrope','system-ui','sans-serif']}}}}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0F172A;--indigo:#4F46E5;--cyan:#22D3EE}
+body{background:var(--bg);color:#e2e8f0;font-family:Manrope,system-ui,sans-serif}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(60rem 30rem at 15% -10%,rgba(79,70,229,.35),transparent),radial-gradient(40rem 25rem at 90% 10%,rgba(34,211,238,.16),transparent)}
+.glass{background:rgba(30,41,59,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.09)}
+.nav-link{color:#94a3b8;font-size:.875rem;padding:.5rem .75rem;position:relative;transition:color .2s}
+.nav-link:hover{color:#fff}.nav-link.is-active{color:#67e8f9}
+.nav-link.is-active::after{content:"";position:absolute;left:.75rem;right:.75rem;bottom:-1px;height:2px;border-radius:2px;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+#mnav .nav-link.is-active::after{display:none}
+.lang-btn{font-size:.75rem;padding:.35rem .55rem;border-radius:.5rem;color:#94a3b8}
+.lang-btn[aria-pressed=true]{background:var(--indigo);color:#fff}
+.skeleton{position:relative;overflow:hidden;background:rgba(148,163,184,.12);border-radius:.5rem}
+.skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);animation:sh 1.2s infinite}
+@keyframes sh{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.lift{transition:transform .25s,border-color .25s}.lift:hover{transform:translateY(-3px);border-color:rgba(34,211,238,.5)}
+.btn{padding:.6rem 1.1rem;border-radius:.75rem;font-weight:600;background:linear-gradient(90deg,#6366f1,#22D3EE);color:#020617}
+.btn:hover{filter:brightness(1.1)}.btn-g{padding:.6rem 1.1rem;border-radius:.75rem}
+.chip{font-size:.75rem;padding:.2rem .6rem;border-radius:999px;border:1px solid rgba(255,255,255,.15)}
+.inp{background:rgba(15,23,42,.7);border:1px solid rgba(255,255,255,.12);border-radius:.6rem;padding:.55rem .75rem;width:100%;color:#e2e8f0}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+
+<body><div id="hdr"></div>
+<main class="pt-24 max-w-7xl mx-auto px-4 space-y-6">
+ <section class="grid lg:grid-cols-3 gap-6">
+  <div class="glass rounded-2xl p-6 lg:col-span-2 flex flex-wrap gap-6 items-center">
+   <span class="w-16 h-16 rounded-full bg-indigo-500/30 grid place-items-center text-2xl text-cyan-300"><i class="fa-solid fa-user-graduate"></i></span>
+   <div class="flex-1 min-w-[14rem]"><h1 class="font-display text-xl">Асель Нурланова</h1>
+    <dl class="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-sm"><dt class="text-slate-400" data-i18n="id"></dt><dd>ST-2023-0417</dd><dt class="text-slate-400" data-i18n="spec"></dt><dd>Software Engineering</dd><dt class="text-slate-400" data-i18n="course"></dt><dd>3</dd><dt class="text-slate-400" data-i18n="group"></dt><dd>ПО-23-1</dd></dl></div>
+  </div>
+  <div class="glass rounded-2xl p-6 flex items-center gap-5">
+   <svg viewBox="0 0 120 120" class="w-28 h-28 -rotate-90"><circle cx="60" cy="60" r="50" fill="none" stroke="#334155" stroke-width="12"/><circle id="ring" cx="60" cy="60" r="50" fill="none" stroke="#22D3EE" stroke-width="12" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314" style="transition:stroke-dashoffset 1.2s"/></svg>
+   <div><div class="font-display text-4xl text-cyan-300">84%</div><div class="text-sm text-slate-400" data-i18n="mrs"></div></div>
+  </div>
+ </section>
+ <section class="grid lg:grid-cols-2 gap-6">
+  <div class="glass rounded-2xl p-6"><h2 class="font-semibold mb-3" data-i18n="radar"></h2><div class="h-72 skeleton" id="sk1"><canvas id="radar"></canvas></div></div>
+  <div class="glass rounded-2xl p-6"><h2 class="font-semibold mb-3" data-i18n="growth"></h2><div class="h-72 skeleton" id="sk2"><canvas id="line"></canvas></div></div>
+ </section>
+ <section class="grid lg:grid-cols-3 gap-6">
+  <div class="glass rounded-2xl p-6 lg:col-span-2"><h2 class="font-semibold mb-4" data-i18n="skills"></h2><div id="skills" class="space-y-4"></div></div>
+  <div class="glass rounded-2xl p-6"><h2 class="font-semibold mb-4"><i class="fa-solid fa-robot text-cyan-300 mr-2"></i><span data-i18n="alerts"></span></h2><div id="alerts" class="space-y-3"></div></div>
+ </section>
+</main>
+<div id="ftr" class="mt-16"></div>
+<script>
+/* AI Career — общий слой: i18n (RU/KK/EN), единые Header/Footer, тосты.
+   Встроен в каждую страницу. */
+(function () {
+  const D = {
+    ru: { nav_home: 'Главная', nav_dash: 'Кабинет', nav_resume: 'Анализ резюме', nav_roadmap: 'Roadmap', nav_jobs: 'Вакансии',
+      login: 'Вход', start: 'Запустить ИИ-анализ', login_toast: 'Вход через портал ТехноИнноПарка скоро будет доступен',
+      f_about: 'Экосистема профориентации и карьерного трекинга студентов.', f_nav: 'Разделы', f_contact: 'Контакты', f_rights: '© 2026 ТехноИнноПарк. Все права защищены.' },
+    kk: { nav_home: 'Басты бет', nav_dash: 'Кабинет', nav_resume: 'Резюме талдауы', nav_roadmap: 'Roadmap', nav_jobs: 'Вакансиялар',
+      login: 'Кіру', start: 'ЖИ-талдауды бастау', login_toast: 'ТехноИнноПарк порталы арқылы кіру жақында қолжетімді болады',
+      f_about: 'Студенттерге арналған кәсіби бағдар және мансап трекингі экожүйесі.', f_nav: 'Бөлімдер', f_contact: 'Байланыс', f_rights: '© 2026 ТехноИнноПарк. Барлық құқықтар қорғалған.' },
+    en: { nav_home: 'Home', nav_dash: 'Dashboard', nav_resume: 'Resume Lab', nav_roadmap: 'Roadmap', nav_jobs: 'Jobs',
+      login: 'Sign in', start: 'Run AI analysis', login_toast: 'Sign-in via the TechnoInnoPark portal is coming soon',
+      f_about: 'A career guidance and tracking ecosystem for students.', f_nav: 'Sections', f_contact: 'Contact', f_rights: '© 2026 TechnoInnoPark. All rights reserved.' }
+  };
+  const LOCALES = { ru: 'ru-RU', kk: 'kk-KZ', en: 'en-GB' };
+  const PAGES = [['index.html', 'nav_home'], ['dashboard.html', 'nav_dash'], ['resume-analyzer.html', 'nav_resume'], ['roadmap.html', 'nav_roadmap'], ['vacancies.html', 'nav_jobs']];
+  let lang = 'ru';
+  try { lang = localStorage.getItem('aic_lang') || 'ru'; } catch (e) {}
+  if (!D[lang]) lang = 'ru';
+
+  const AI = {
+    get lang() { return lang; },
+    get locale() { return LOCALES[lang]; },
+    add(dict) { for (const l in dict) Object.assign(D[l], dict[l]); },
+    t(k) { return (D[lang] && D[lang][k]) || D.ru[k] || k; },
+    apply(root) {
+      (root || document).querySelectorAll('[data-i18n]').forEach(el => { el.textContent = AI.t(el.dataset.i18n); });
+      document.documentElement.lang = lang;
+    },
+    setLang(l) {
+      lang = l;
+      try { localStorage.setItem('aic_lang', l); } catch (e) {}
+      document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === l));
+      AI.apply();
+      document.dispatchEvent(new CustomEvent('langchange', { detail: l }));
+    },
+    toast(msg, type) {
+      let box = document.getElementById('toasts');
+      if (!box) { box = document.createElement('div'); box.id = 'toasts'; box.className = 'fixed bottom-5 right-5 z-[100] flex flex-col gap-2'; document.body.appendChild(box); }
+      const el = document.createElement('div');
+      el.className = 'glass rounded-xl px-4 py-3 text-sm flex items-center gap-3 shadow-2xl transition-all duration-300 translate-y-2 opacity-0 max-w-xs';
+      el.innerHTML = '<i class="fa-solid ' + (type === 'error' ? 'fa-circle-exclamation text-rose-400' : 'fa-circle-check text-cyan-300') + '"></i><span></span>';
+      el.lastChild.textContent = msg;
+      box.appendChild(el);
+      requestAnimationFrame(() => el.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => { el.classList.add('opacity-0'); setTimeout(() => el.remove(), 300); }, 3200);
+    },
+    init(active) {
+      const links = (cls) => PAGES.map(([h, k]) =>
+        '<a href="' + h + '" data-i18n="' + k + '" class="' + cls + (h === active ? ' is-active' : '') + '"' + (h === active ? ' aria-current="page"' : '') + '></a>').join('');
+      const langs = ['ru', 'kk', 'en'].map((l, i) => '<button data-lang="' + l + '" aria-pressed="' + (l === lang) + '" class="lang-btn" title="' + ['Русский', 'Қазақша', 'English'][i] + '">' + ['🇷🇺 RU', '🇰🇿 KK', '🇬🇧 EN'][i] + '</button>').join('');
+      document.getElementById('hdr').innerHTML =
+        '<header class="fixed top-0 inset-x-0 z-50 glass border-x-0 border-t-0"><div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">' +
+        '<a href="index.html" class="flex items-center gap-2 font-display font-semibold shrink-0"><span class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-400 grid place-items-center text-slate-950"><i class="fa-solid fa-microchip"></i></span><span class="hidden sm:inline">ТехноИнноПарк <span class="text-slate-500">|</span> <span class="text-cyan-300">AI Career</span></span></a>' +
+        '<nav class="hidden lg:flex items-center gap-1 mx-auto">' + links('nav-link') + '</nav>' +
+        '<div class="ml-auto flex items-center gap-2"><div class="flex rounded-lg bg-slate-900/70 p-0.5">' + langs + '</div>' +
+        '<button id="login-btn" class="hidden md:block px-3 py-2 text-sm text-slate-300 hover:text-white" data-i18n="login"></button>' +
+        '<a href="resume-analyzer.html" class="hidden md:block px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950 hover:brightness-110" data-i18n="start"></a>' +
+        '<button id="burger" class="lg:hidden w-10 h-10 rounded-lg bg-slate-900/70" aria-label="Menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button></div></div>' +
+        '<nav id="mnav" class="hidden lg:hidden px-4 pb-4 flex-col gap-1">' + links('block px-3 py-2 rounded-lg nav-link') + '</nav></header>';
+      document.getElementById('ftr').innerHTML =
+        '<footer class="border-t border-white/10 mt-24"><div class="max-w-7xl mx-auto px-4 py-12 grid gap-8 md:grid-cols-3 text-sm text-slate-400">' +
+        '<div><div class="font-display text-white mb-2">ТехноИнноПарк | AI Career</div><p data-i18n="f_about"></p></div>' +
+        '<div><div class="text-white mb-2" data-i18n="f_nav"></div><div class="flex flex-col gap-1">' + links('hover:text-cyan-300') + '</div></div>' +
+        '<div><div class="text-white mb-2" data-i18n="f_contact"></div><p>Kokshetau, Kazakhstan</p><p>career@technoinnopark.example</p></div></div>' +
+        '<div class="text-center text-xs text-slate-500 pb-8" data-i18n="f_rights"></div></footer>';
+      document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => AI.setLang(b.dataset.lang)));
+      document.getElementById('login-btn').addEventListener('click', () => AI.toast(AI.t('login_toast')));
+      const burger = document.getElementById('burger'), mnav = document.getElementById('mnav');
+      burger.addEventListener('click', () => { const open = mnav.classList.toggle('hidden') === false; mnav.classList.toggle('flex', open); burger.setAttribute('aria-expanded', open); });
+      AI.apply();
+    }
+  };
+  window.AI = AI;
+})();
+</script>
+<script>
+AI.add({
+ru:{id:'ИИН / ID',spec:'Специальность',course:'Курс',group:'Группа',mrs:'Индекс готовности к рынку',radar:'Hard vs Soft vs эталон рынка',growth:'Рост навыков за 6 месяцев',skills:'Компетенции',alerts:'Уведомления ИИ',me:'Вы',mk:'Эталон рынка',cert:'Сертификат подтверждён',nocert:'Без сертификата',
+ alg:'Алгоритмы',team:'Команда',comm:'Коммуникация',time:'Тайм-менеджмент',a1:'Ваш навык Docker устарел на 15%. Подтяните его для вакансии в IT-hub.',a2:'Три вакансии в Астане требуют Kubernetes. Добавьте его в Roadmap.',a3:'Сертификат по SQL подтверждён. Индекс готовности вырос на 2%.',fix:'Открыть Roadmap',ok:'Понятно',dis:'Уведомление скрыто'},
+kk:{id:'ЖСН / ID',spec:'Мамандық',course:'Курс',group:'Топ',mrs:'Нарыққа дайындық индексі',radar:'Hard vs Soft vs нарық эталоны',growth:'6 айдағы дағдылар өсуі',skills:'Құзыреттер',alerts:'ЖИ хабарламалары',me:'Сіз',mk:'Нарық эталоны',cert:'Сертификат расталған',nocert:'Сертификатсыз',
+ alg:'Алгоритмдер',team:'Команда',comm:'Коммуникация',time:'Тайм-менеджмент',a1:'Docker дағдыңыз 15%-ға ескірді. IT-hub вакансиясы үшін жетілдіріңіз.',a2:'Астанадағы үш вакансия Kubernetes талап етеді. Оны Roadmap-қа қосыңыз.',a3:'SQL сертификаты расталды. Дайындық индексі 2%-ға өсті.',fix:'Roadmap ашу',ok:'Түсінікті',dis:'Хабарлама жасырылды'},
+en:{id:'ID',spec:'Major',course:'Year',group:'Group',mrs:'Market Readiness Score',radar:'Hard vs Soft vs market benchmark',growth:'Skill growth over 6 months',skills:'Competencies',alerts:'AI alerts',me:'You',mk:'Market benchmark',cert:'Certificate verified',nocert:'No certificate',
+ alg:'Algorithms',team:'Teamwork',comm:'Communication',time:'Time mgmt',a1:'Your Docker skill is 15% out of date. Refresh it for the IT-hub vacancy.',a2:'Three vacancies in Astana require Kubernetes. Add it to your Roadmap.',a3:'SQL certificate verified. Readiness index rose by 2%.',fix:'Open Roadmap',ok:'Got it',dis:'Alert dismissed'}});
+AI.init('dashboard.html');
+const S=[['Python',82,1,75],['JavaScript / React',74,1,72],['SQL',70,1,68],['Git',85,1,70],['Docker',61,0,72],['Kubernetes',20,0,60]];
+const MONTHS=()=>[...Array(6)].map((_,i)=>new Date(2026,i+4,1).toLocaleString(AI.locale,{month:'short'}));
+let ch=[];
+function skills(){document.getElementById('skills').innerHTML=S.map(([n,v,c,m])=>`<div><div class="flex items-center gap-2 text-sm mb-1"><span class="font-semibold">${n}</span><span class="chip ${v>=65?'text-cyan-300 border-cyan-400/40':'text-slate-300'}">${v>=65?'Middle':'Junior'}</span><span class="ml-auto text-xs ${c?'text-emerald-400':'text-slate-500'}"><i class="fa-solid ${c?'fa-certificate':'fa-circle-minus'}"></i> ${AI.t(c?'cert':'nocert')}</span><span class="text-slate-400 w-10 text-right">${v}%</span></div><div class="relative h-2 rounded-full bg-slate-700/60"><div class="h-2 rounded-full ${v>=m?'bg-emerald-400':'bg-amber-400'}" style="width:${v}%"></div><span class="absolute -top-1 w-0.5 h-4 bg-white/70" style="left:${m}%" title="${AI.t('mk')}"></span></div></div>`).join('');}
+function alerts(){const A=[['a1','fa-triangle-exclamation text-amber-400',1],['a2','fa-bolt text-rose-400',1],['a3','fa-circle-check text-emerald-400',0]];
+ document.getElementById('alerts').innerHTML=A.map(([k,i,l],x)=>`<div class="rounded-xl bg-slate-900/60 border border-white/10 p-3 text-sm" id="al${x}"><div class="flex gap-3"><i class="fa-solid ${i} mt-1"></i><p>${AI.t(k)}</p></div><div class="mt-2 flex gap-3 justify-end text-xs">${l?`<a href="roadmap.html" class="text-cyan-300">${AI.t('fix')}</a>`:''}<button data-x="${x}" class="text-slate-400 hover:text-white">${AI.t('ok')}</button></div></div>`).join('');
+ document.querySelectorAll('#alerts button').forEach(b=>b.onclick=()=>{document.getElementById('al'+b.dataset.x).remove();AI.toast(AI.t('dis'))});}
+function charts(){ch.forEach(c=>c.destroy());ch=[];
+ const tk={color:'#94a3b8'},gr={color:'rgba(255,255,255,.08)'};
+ setTimeout(()=>{['sk1','sk2'].forEach(i=>document.getElementById(i).classList.remove('skeleton'));
+ ch.push(new Chart(document.getElementById('radar'),{type:'radar',data:{labels:['Python','Web','SQL','DevOps',AI.t('alg'),AI.t('team'),AI.t('comm'),AI.t('time')],datasets:[{label:AI.t('me'),data:[82,74,70,61,68,80,72,65],borderColor:'#22D3EE',backgroundColor:'rgba(34,211,238,.25)'},{label:AI.t('mk'),data:[75,72,68,72,70,70,70,70],borderColor:'#a78bfa',borderDash:[5,4],backgroundColor:'transparent'}]},options:{maintainAspectRatio:false,plugins:{legend:{labels:tk}},scales:{r:{min:0,max:100,ticks:{display:false},grid:gr,angleLines:gr,pointLabels:tk}}}}));
+ ch.push(new Chart(document.getElementById('line'),{type:'line',data:{labels:MONTHS(),datasets:[['Python',[58,62,68,74,79,82],'#22D3EE'],['React',[40,48,55,63,70,74],'#818cf8'],['Docker',[50,58,66,70,66,61],'#fbbf24']].map(([l,d,c])=>({label:l,data:d,borderColor:c,tension:.35,pointRadius:3}))},options:{maintainAspectRatio:false,plugins:{legend:{labels:tk}},scales:{x:{ticks:tk,grid:gr},y:{min:30,max:100,ticks:tk,grid:gr}}}}));},500);}
+function all(){skills();alerts();charts();}
+document.addEventListener('langchange',all);all();
+setTimeout(()=>document.getElementById('ring').style.strokeDashoffset=314*(1-.84),100);
+</script></body></html>

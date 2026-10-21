@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resume Lab — ТехноИнноПарк | AI Career</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{display:['Unbounded','Manrope','sans-serif'],sans:['Manrope','system-ui','sans-serif']}}}}</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0F172A;--indigo:#4F46E5;--cyan:#22D3EE}
+body{background:var(--bg);color:#e2e8f0;font-family:Manrope,system-ui,sans-serif}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(60rem 30rem at 15% -10%,rgba(79,70,229,.35),transparent),radial-gradient(40rem 25rem at 90% 10%,rgba(34,211,238,.16),transparent)}
+.glass{background:rgba(30,41,59,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.09)}
+.nav-link{color:#94a3b8;font-size:.875rem;padding:.5rem .75rem;position:relative;transition:color .2s}
+.nav-link:hover{color:#fff}.nav-link.is-active{color:#67e8f9}
+.nav-link.is-active::after{content:"";position:absolute;left:.75rem;right:.75rem;bottom:-1px;height:2px;border-radius:2px;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+#mnav .nav-link.is-active::after{display:none}
+.lang-btn{font-size:.75rem;padding:.35rem .55rem;border-radius:.5rem;color:#94a3b8}
+.lang-btn[aria-pressed=true]{background:var(--indigo);color:#fff}
+.skeleton{position:relative;overflow:hidden;background:rgba(148,163,184,.12);border-radius:.5rem}
+.skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);animation:sh 1.2s infinite}
+@keyframes sh{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+.lift{transition:transform .25s,border-color .25s}.lift:hover{transform:translateY(-3px);border-color:rgba(34,211,238,.5)}
+.btn{padding:.6rem 1.1rem;border-radius:.75rem;font-weight:600;background:linear-gradient(90deg,#6366f1,#22D3EE);color:#020617}
+.btn:hover{filter:brightness(1.1)}.btn-g{padding:.6rem 1.1rem;border-radius:.75rem}
+.chip{font-size:.75rem;padding:.2rem .6rem;border-radius:999px;border:1px solid rgba(255,255,255,.15)}
+.inp{background:rgba(15,23,42,.7);border:1px solid rgba(255,255,255,.12);border-radius:.6rem;padding:.55rem .75rem;width:100%;color:#e2e8f0}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+
+<body><div id="hdr"></div>
+<main class="pt-24 max-w-5xl mx-auto px-4 space-y-6">
+ <h1 class="font-display text-2xl sm:text-3xl" data-i18n="title"></h1>
+ <section id="up" class="glass rounded-2xl p-8 text-center border-2 border-dashed border-white/20" tabindex="0">
+  <i class="fa-solid fa-cloud-arrow-up text-4xl text-cyan-300"></i>
+  <p class="mt-3" data-i18n="drop"></p><p class="text-xs text-slate-400 mt-1" data-i18n="limits"></p>
+  <div class="mt-5 flex flex-wrap gap-3 justify-center"><button id="pick" class="btn" data-i18n="choose"></button><button id="demo" class="glass btn-g hover:border-cyan-400/50" data-i18n="demo"></button></div>
+  <input id="file" type="file" accept=".pdf,.docx" class="hidden">
+ </section>
+ <section id="scan" class="glass rounded-2xl p-6 hidden"><div class="text-sm text-slate-400 mb-3" id="fname"></div><div class="h-2 rounded-full bg-slate-700/60 mb-5"><div id="bar" class="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400" style="width:0;transition:width .8s"></div></div><ul id="steps" class="space-y-2 text-sm"></ul></section>
+ <section id="rep" class="hidden space-y-6">
+  <div class="grid md:grid-cols-3 gap-6">
+   <div class="glass rounded-2xl p-6 text-center"><div class="text-sm text-slate-400">ATS Readiness Score</div><div id="score" class="font-display text-6xl my-3"></div><div id="lamp" class="inline-block px-3 py-1 rounded-full text-sm"></div></div>
+   <div class="glass rounded-2xl p-6 md:col-span-2"><h2 class="font-semibold mb-3 text-rose-300"><i class="fa-solid fa-circle-exclamation mr-2"></i><span data-i18n="errs"></span></h2><ul id="errs" class="space-y-3 text-sm"></ul></div>
+  </div>
+  <div class="grid md:grid-cols-2 gap-6">
+   <div class="glass rounded-2xl p-6"><h2 class="font-semibold mb-3" data-i18n="tree"></h2><div id="tree" class="space-y-3"></div></div>
+   <div class="glass rounded-2xl p-6"><div class="flex gap-2 mb-3" id="tabs"></div><ul id="recs" class="space-y-2 text-sm list-disc pl-5 text-slate-300"></ul></div>
+  </div>
+ </section>
+</main>
+<div id="ftr" class="mt-16"></div>
+<script>
+/* AI Career — общий слой: i18n (RU/KK/EN), единые Header/Footer, тосты.
+   Встроен в каждую страницу. */
+(function () {
+  const D = {
+    ru: { nav_home: 'Главная', nav_dash: 'Кабинет', nav_resume: 'Анализ резюме', nav_roadmap: 'Roadmap', nav_jobs: 'Вакансии',
+      login: 'Вход', start: 'Запустить ИИ-анализ', login_toast: 'Вход через портал ТехноИнноПарка скоро будет доступен',
+      f_about: 'Экосистема профориентации и карьерного трекинга студентов.', f_nav: 'Разделы', f_contact: 'Контакты', f_rights: '© 2026 ТехноИнноПарк. Все права защищены.' },
+    kk: { nav_home: 'Басты бет', nav_dash: 'Кабинет', nav_resume: 'Резюме талдауы', nav_roadmap: 'Roadmap', nav_jobs: 'Вакансиялар',
+      login: 'Кіру', start: 'ЖИ-талдауды бастау', login_toast: 'ТехноИнноПарк порталы арқылы кіру жақында қолжетімді болады',
+      f_about: 'Студенттерге арналған кәсіби бағдар және мансап трекингі экожүйесі.', f_nav: 'Бөлімдер', f_contact: 'Байланыс', f_rights: '© 2026 ТехноИнноПарк. Барлық құқықтар қорғалған.' },
+    en: { nav_home: 'Home', nav_dash: 'Dashboard', nav_resume: 'Resume Lab', nav_roadmap: 'Roadmap', nav_jobs: 'Jobs',
+      login: 'Sign in', start: 'Run AI analysis', login_toast: 'Sign-in via the TechnoInnoPark portal is coming soon',
+      f_about: 'A career guidance and tracking ecosystem for students.', f_nav: 'Sections', f_contact: 'Contact', f_rights: '© 2026 TechnoInnoPark. All rights reserved.' }
+  };
+  const LOCALES = { ru: 'ru-RU', kk: 'kk-KZ', en: 'en-GB' };
+  const PAGES = [['index.html', 'nav_home'], ['dashboard.html', 'nav_dash'], ['resume-analyzer.html', 'nav_resume'], ['roadmap.html', 'nav_roadmap'], ['vacancies.html', 'nav_jobs']];
+  let lang = 'ru';
+  try { lang = localStorage.getItem('aic_lang') || 'ru'; } catch (e) {}
+  if (!D[lang]) lang = 'ru';
+
+  const AI = {
+    get lang() { return lang; },
+    get locale() { return LOCALES[lang]; },
+    add(dict) { for (const l in dict) Object.assign(D[l], dict[l]); },
+    t(k) { return (D[lang] && D[lang][k]) || D.ru[k] || k; },
+    apply(root) {
+      (root || document).querySelectorAll('[data-i18n]').forEach(el => { el.textContent = AI.t(el.dataset.i18n); });
+      document.documentElement.lang = lang;
+    },
+    setLang(l) {
+      lang = l;
+      try { localStorage.setItem('aic_lang', l); } catch (e) {}
+      document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === l));
+      AI.apply();
+      document.dispatchEvent(new CustomEvent('langchange', { detail: l }));
+    },
+    toast(msg, type) {
+      let box = document.getElementById('toasts');
+      if (!box) { box = document.createElement('div'); box.id = 'toasts'; box.className = 'fixed bottom-5 right-5 z-[100] flex flex-col gap-2'; document.body.appendChild(box); }
+      const el = document.createElement('div');
+      el.className = 'glass rounded-xl px-4 py-3 text-sm flex items-center gap-3 shadow-2xl transition-all duration-300 translate-y-2 opacity-0 max-w-xs';
+      el.innerHTML = '<i class="fa-solid ' + (type === 'error' ? 'fa-circle-exclamation text-rose-400' : 'fa-circle-check text-cyan-300') + '"></i><span></span>';
+      el.lastChild.textContent = msg;
+      box.appendChild(el);
+      requestAnimationFrame(() => el.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => { el.classList.add('opacity-0'); setTimeout(() => el.remove(), 300); }, 3200);
+    },
+    init(active) {
+      const links = (cls) => PAGES.map(([h, k]) =>
+        '<a href="' + h + '" data-i18n="' + k + '" class="' + cls + (h === active ? ' is-active' : '') + '"' + (h === active ? ' aria-current="page"' : '') + '></a>').join('');
+      const langs = ['ru', 'kk', 'en'].map((l, i) => '<button data-lang="' + l + '" aria-pressed="' + (l === lang) + '" class="lang-btn" title="' + ['Русский', 'Қазақша', 'English'][i] + '">' + ['🇷🇺 RU', '🇰🇿 KK', '🇬🇧 EN'][i] + '</button>').join('');
+      document.getElementById('hdr').innerHTML =
+        '<header class="fixed top-0 inset-x-0 z-50 glass border-x-0 border-t-0"><div class="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">' +
+        '<a href="index.html" class="flex items-center gap-2 font-display font-semibold shrink-0"><span class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-400 grid place-items-center text-slate-950"><i class="fa-solid fa-microchip"></i></span><span class="hidden sm:inline">ТехноИнноПарк <span class="text-slate-500">|</span> <span class="text-cyan-300">AI Career</span></span></a>' +
+        '<nav class="hidden lg:flex items-center gap-1 mx-auto">' + links('nav-link') + '</nav>' +
+        '<div class="ml-auto flex items-center gap-2"><div class="flex rounded-lg bg-slate-900/70 p-0.5">' + langs + '</div>' +
+        '<button id="login-btn" class="hidden md:block px-3 py-2 text-sm text-slate-300 hover:text-white" data-i18n="login"></button>' +
+        '<a href="resume-analyzer.html" class="hidden md:block px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950 hover:brightness-110" data-i18n="start"></a>' +
+        '<button id="burger" class="lg:hidden w-10 h-10 rounded-lg bg-slate-900/70" aria-label="Menu" aria-expanded="false"><i class="fa-solid fa-bars"></i></button></div></div>' +
+        '<nav id="mnav" class="hidden lg:hidden px-4 pb-4 flex-col gap-1">' + links('block px-3 py-2 rounded-lg nav-link') + '</nav></header>';
+      document.getElementById('ftr').innerHTML =
+        '<footer class="border-t border-white/10 mt-24"><div class="max-w-7xl mx-auto px-4 py-12 grid gap-8 md:grid-cols-3 text-sm text-slate-400">' +
+        '<div><div class="font-display text-white mb-2">ТехноИнноПарк | AI Career</div><p data-i18n="f_about"></p></div>' +
+        '<div><div class="text-white mb-2" data-i18n="f_nav"></div><div class="flex flex-col gap-1">' + links('hover:text-cyan-300') + '</div></div>' +
+        '<div><div class="text-white mb-2" data-i18n="f_contact"></div><p>Kokshetau, Kazakhstan</p><p>career@technoinnopark.example</p></div></div>' +
+        '<div class="text-center text-xs text-slate-500 pb-8" data-i18n="f_rights"></div></footer>';
+      document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => AI.setLang(b.dataset.lang)));
+      document.getElementById('login-btn').addEventListener('click', () => AI.toast(AI.t('login_toast')));
+      const burger = document.getElementById('burger'), mnav = document.getElementById('mnav');
+      burger.addEventListener('click', () => { const open = mnav.classList.toggle('hidden') === false; mnav.classList.toggle('flex', open); burger.setAttribute('aria-expanded', open); });
+      AI.apply();
+    }
+  };
+  window.AI = AI;
+})();
+</script>
+<script>
+AI.add({
+ru:{title:'ИИ-лаборатория анализа резюме',drop:'Перетащите резюме сюда',limits:'PDF или DOCX, до 5 МБ',choose:'Выбрать файл',demo:'Загрузить демо-шаблон студента',badfmt:'Неверный формат: нужен PDF или DOCX',big:'Файл больше 5 МБ',errs:'Критические ошибки',tree:'Дерево навыков',
+ st1:'Извлечение текста',st2:'Парсинг хард-скиллов',st3:'Проверка на соответствие ATS',st4:'Сопоставление с вакансиями РК',done:'Анализ завершён',lamp:'Нужны правки',
+ e1t:'Грамматика',e1:'3 опечатки в разделе «Опыт»; названия технологий написаны непоследовательно (Javascript / JavaScript).',e2t:'Нет количественных результатов',e2:'«Разработал сервис» — укажите эффект: «сократил время ответа API на 35%».',e3t:'Слабые глаголы',e3:'«Участвовал», «помогал» замените на «спроектировал», «внедрил», «оптимизировал».',
+ c1:'Языки',c2:'Фреймворки',c3:'Инструменты',c4:'Soft skills',kz:'Казахстан',gl:'CIS / Global',
+ k1:'Добавьте блок на казахском или русском и указывайте город/готовность к релокации.',k2:'Укажите ссылку на GitHub и проекты Технопарка.',k3:'Для банков и телекома выделите SQL, Java/Python и опыт командной работы.',
+ g1:'Пишите резюме на английском, 1 страница, без фото.',g2:'Покажите вклад в open source и английский уровень (B2+).',g3:'Используйте формат «действие + метрика + результат».'},
+kk:{title:'Резюме талдайтын ЖИ-зертхана',drop:'Резюмені осында сүйреңіз',limits:'PDF немесе DOCX, 5 МБ дейін',choose:'Файлды таңдау',demo:'Студенттің демо-үлгісін жүктеу',badfmt:'Формат дұрыс емес: PDF немесе DOCX керек',big:'Файл 5 МБ-тан үлкен',errs:'Маңызды қателер',tree:'Дағдылар ағашы',
+ st1:'Мәтінді шығарып алу',st2:'Hard-дағдыларды талдау',st3:'ATS сәйкестігін тексеру',st4:'ҚР вакансияларымен салыстыру',done:'Талдау аяқталды',lamp:'Түзету қажет',
+ e1t:'Грамматика',e1:'«Тәжірибе» бөлімінде 3 қате; технология атаулары біркелкі емес (Javascript / JavaScript).',e2t:'Сандық нәтижелер жоқ',e2:'«Сервис жасадым» — әсерін көрсетіңіз: «API жауап уақытын 35%-ға қысқарттым».',e3t:'Әлсіз етістіктер',e3:'«Қатыстым», «көмектестім» орнына «жобаладым», «енгіздім», «оңтайландырдым» деп жазыңыз.',
+ c1:'Тілдер',c2:'Фреймворктер',c3:'Құралдар',c4:'Soft skills',kz:'Қазақстан',gl:'ТМД / Global',
+ k1:'Қазақша немесе орысша бөлім қосып, қала мен көшуге дайындығыңызды көрсетіңіз.',k2:'GitHub пен Технопарк жобаларына сілтеме беріңіз.',k3:'Банктер мен телеком үшін SQL, Java/Python және командалық жұмысты бөліп көрсетіңіз.',
+ g1:'Резюмені ағылшынша, 1 бет, фотосыз жазыңыз.',g2:'Open source үлесі мен ағылшын деңгейін (B2+) көрсетіңіз.',g3:'«әрекет + метрика + нәтиже» форматын қолданыңыз.'},
+en:{title:'AI Resume Lab',drop:'Drag your resume here',limits:'PDF or DOCX, up to 5 MB',choose:'Choose file',demo:'Load demo student resume',badfmt:'Wrong format: PDF or DOCX required',big:'File is larger than 5 MB',errs:'Critical issues',tree:'Skill tree',
+ st1:'Extracting text',st2:'Parsing hard skills',st3:'Checking ATS compatibility',st4:'Matching Kazakhstan vacancies',done:'Analysis complete',lamp:'Needs edits',
+ e1t:'Grammar',e1:'3 typos in “Experience”; inconsistent tech names (Javascript / JavaScript).',e2t:'No quantified results',e2:'“Built a service” — add impact: “cut API response time by 35%”.',e3t:'Weak verbs',e3:'Replace “participated”, “helped” with “designed”, “shipped”, “optimized”.',
+ c1:'Languages',c2:'Frameworks',c3:'Tools',c4:'Soft skills',kz:'Kazakhstan',gl:'CIS / Global',
+ k1:'Add a Kazakh or Russian section and state your city and relocation readiness.',k2:'Link your GitHub and Technopark projects.',k3:'For banks and telecom, highlight SQL, Java/Python and teamwork.',
+ g1:'Write in English, one page, no photo.',g2:'Show open-source contributions and English level (B2+).',g3:'Use the “action + metric + result” pattern.'}});
+AI.init('resume-analyzer.html');
+const $=id=>document.getElementById(id),up=$('up');let region='kz',done=false;
+const TREE=[['c1',['Python','JavaScript','SQL','Java']],['c2',['React','FastAPI','Django']],['c3',['Git','Docker','Linux']],['c4',['Teamwork','Presentation']]];
+function report(){const s=78;$('score').textContent=s;const c=s>=80?'emerald':s>=50?'amber':'rose';
+ $('score').className=`font-display text-6xl my-3 text-${c}-400`;$('lamp').className=`inline-block px-3 py-1 rounded-full text-sm bg-${c}-400/15 text-${c}-300 shadow-[0_0_20px] shadow-${c}-400/40`;$('lamp').textContent='● '+AI.t('lamp');
+ $('errs').innerHTML=[1,2,3].map(i=>`<li><b>${AI.t('e'+i+'t')}</b><p class="text-slate-400">${AI.t('e'+i)}</p></li>`).join('');
+ $('tree').innerHTML=TREE.map(([k,a])=>`<div><div class="text-xs text-slate-400 mb-1">${AI.t(k)}</div><div class="flex flex-wrap gap-2">${a.map(x=>`<span class="chip text-cyan-200">${x}</span>`).join('')}</div></div>`).join('');
+ $('tabs').innerHTML=['kz','gl'].map(r=>`<button data-r="${r}" class="chip ${r===region?'bg-indigo-500 border-indigo-500':''}">${AI.t(r)}</button>`).join('');
+ $('recs').innerHTML=(region==='kz'?['k1','k2','k3']:['g1','g2','g3']).map(k=>`<li>${AI.t(k)}</li>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{region=b.dataset.r;report()});}
+function run(name){$('scan').classList.remove('hidden');$('rep').classList.add('hidden');done=false;$('fname').textContent=name;
+ const L=$('steps');L.innerHTML=[1,2,3,4].map(i=>`<li class="flex gap-3 text-slate-500" id="s${i}"><i class="fa-regular fa-circle mt-1"></i>${AI.t('st'+i)}</li>`).join('');
+ [1,2,3,4].forEach(i=>setTimeout(()=>{$('bar').style.width=i*25+'%';$('s'+i).className='flex gap-3 text-emerald-300';$('s'+i).firstChild.className='fa-solid fa-circle-check mt-1';
+  if(i===4){done=true;$('rep').classList.remove('hidden');report();AI.toast(AI.t('done'));}},i*900));$('bar').style.width='0';}
+function take(f){const ok=/\.(pdf|docx)$/i.test(f.name);if(!ok)return AI.toast(AI.t('badfmt'),'error');if(f.size>5*1024*1024)return AI.toast(AI.t('big'),'error');run(f.name+' ('+Math.ceil(f.size/1024)+' KB)');}
+$('pick').onclick=()=>$('file').click();$('file').onchange=e=>e.target.files[0]&&take(e.target.files[0]);
+$('demo').onclick=()=>run('demo_resume_student.pdf');
+['dragover','dragenter'].forEach(e=>up.addEventListener(e,x=>{x.preventDefault();up.classList.add('border-cyan-400')}));
+['dragleave','drop'].forEach(e=>up.addEventListener(e,x=>{x.preventDefault();up.classList.remove('border-cyan-400')}));
+up.addEventListener('drop',e=>e.dataTransfer.files[0]&&take(e.dataTransfer.files[0]));
+document.addEventListener('langchange',()=>{if(done)report();});
+</script></body></html>
