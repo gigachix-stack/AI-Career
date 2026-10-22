@@ -6,6 +6,8 @@
 <script>tailwind.config={theme:{extend:{fontFamily:{display:['Unbounded','Manrope','sans-serif'],sans:['Manrope','system-ui','sans-serif']}}}}</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <style>
 :root{--bg:#0F172A;--indigo:#4F46E5;--cyan:#22D3EE}
 body{background:var(--bg);color:#e2e8f0;font-family:Manrope,system-ui,sans-serif}
@@ -35,19 +37,21 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-grad
  <section id="up" class="glass rounded-2xl p-8 text-center border-2 border-dashed border-white/20" tabindex="0">
   <i class="fa-solid fa-cloud-arrow-up text-4xl text-cyan-300"></i>
   <p class="mt-3" data-i18n="drop"></p><p class="text-xs text-slate-400 mt-1" data-i18n="limits"></p>
-  <div class="mt-5 flex flex-wrap gap-3 justify-center"><button id="pick" class="btn" data-i18n="choose"></button><button id="demo" class="glass btn-g hover:border-cyan-400/50" data-i18n="demo"></button></div>
+  <div class="mt-5 flex flex-wrap gap-3 justify-center"><button id="pick" class="btn" data-i18n="choose"></button><button id="demo" class="glass btn-g hover:border-cyan-400/50" data-i18n="demo"></button><button id="demo2" class="glass btn-g hover:border-cyan-400/50" data-i18n="demo2"></button></div>
   <input id="file" type="file" accept=".pdf,.docx" class="hidden">
  </section>
- <section id="scan" class="glass rounded-2xl p-6 hidden"><div class="text-sm text-slate-400 mb-3" id="fname"></div><div class="h-2 rounded-full bg-slate-700/60 mb-5"><div id="bar" class="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400" style="width:0;transition:width .8s"></div></div><ul id="steps" class="space-y-2 text-sm"></ul></section>
+ <section id="scan" class="glass rounded-2xl p-6 hidden"><div class="text-sm text-slate-400 mb-3" id="fname"></div><div class="h-2 rounded-full bg-slate-700/60 mb-5"><div id="bar" class="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-400" style="width:0;transition:width .6s"></div></div><ul id="steps" class="space-y-2 text-sm"></ul></section>
  <section id="rep" class="hidden space-y-6">
   <div class="grid md:grid-cols-3 gap-6">
-   <div class="glass rounded-2xl p-6 text-center"><div class="text-sm text-slate-400">ATS Readiness Score</div><div id="score" class="font-display text-6xl my-3"></div><div id="lamp" class="inline-block px-3 py-1 rounded-full text-sm"></div></div>
-   <div class="glass rounded-2xl p-6 md:col-span-2"><h2 class="font-semibold mb-3 text-rose-300"><i class="fa-solid fa-circle-exclamation mr-2"></i><span data-i18n="errs"></span></h2><ul id="errs" class="space-y-3 text-sm"></ul></div>
+   <div class="glass rounded-2xl p-6 text-center"><div class="text-sm text-slate-400">ATS Readiness Score</div><div id="score" class="font-display text-6xl my-3"></div><div id="lamp" class="inline-block px-3 py-1 rounded-full text-sm"></div><ul id="checks" class="mt-4 grid grid-cols-2 gap-1 text-xs text-left"></ul></div>
+   <div class="glass rounded-2xl p-6 md:col-span-2"><h2 class="font-semibold mb-3"><i class="fa-solid fa-circle-exclamation mr-2 text-rose-300"></i><span data-i18n="errs"></span></h2><ul id="errs" class="space-y-3 text-sm"></ul></div>
   </div>
   <div class="grid md:grid-cols-2 gap-6">
    <div class="glass rounded-2xl p-6"><h2 class="font-semibold mb-3" data-i18n="tree"></h2><div id="tree" class="space-y-3"></div></div>
    <div class="glass rounded-2xl p-6"><div class="flex gap-2 mb-3" id="tabs"></div><ul id="recs" class="space-y-2 text-sm list-disc pl-5 text-slate-300"></ul></div>
   </div>
+  <div class="glass rounded-2xl p-6"><h2 class="font-semibold mb-3" data-i18n="vm"></h2><div id="vac" class="grid sm:grid-cols-3 gap-3"></div></div>
+  <p class="text-xs text-slate-500" data-i18n="how"></p>
  </section>
 </main>
 <div id="ftr" class="mt-16"></div>
@@ -129,44 +133,119 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-grad
 })();
 </script>
 <script>
+/*CORE*/
+const SK=[['c1','Python'],['c1','JavaScript'],['c1','TypeScript'],['c1','Java'],['c1','SQL'],['c1','C++'],['c1','C#'],['c1','PHP'],['c1','Kotlin'],
+['c2','React'],['c2','Vue'],['c2','Angular'],['c2','Django'],['c2','FastAPI'],['c2','Flask'],['c2','Node.js'],['c2','Pandas'],
+['c3','Git'],['c3','Docker'],['c3','Kubernetes'],['c3','Linux'],['c3','PostgreSQL'],['c3','MySQL'],['c3','MongoDB'],['c3','Redis'],['c3','AWS'],['c3','Azure'],['c3','CI/CD'],['c3','Terraform'],['c3','Figma'],['c3','Jira'],['c3','Networking',/networking|(?<![\p{L}])сети(?![\p{L}])|\bTCP\b/iu]];
+const SOFT=[['Teamwork',/командн|teamwork|team player/i],['Communication',/коммуникац|communication/i],['Presentations',/презентац|presentation|public speaking/i],['Leadership',/лидер|leadership/i],['Scrum / Agile',/scrum|agile/i],['Time management',/тайм-менеджмент|time management/i]];
+const TY=[['пркатик','практик'],['комманд','команд'],['програмист','программист'],['пожалуста','пожалуйста'],['вообщем','в общем'],['developement','development'],['recieve','receive'],['experiance','experience'],['managment','management'],['knowlege','knowledge'],['seperate','separate'],['langauge','language'],['enviroment','environment']];
+const VAC=[['DevOps Intern · QazCloud',['Linux','Docker','Git','Kubernetes','CI/CD']],['Junior Python · Steppe Pay',['Python','FastAPI','SQL','Docker']],['ML Placement · Altyn Data',['Python','Pandas','SQL']],['Junior React · Tengri Soft',['React','TypeScript','Git']],['Security Intern · Nomad Secure',['Linux','Networking','Python']],['Full-Stack Intern · Baiterek Labs',['Python','React','SQL','Docker']]];
+const esc=s=>s.replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&');
+const HEAD=/^(о себе|обо мне|summary|profile|образование|education|опыт(?: работы)?|experience|work experience|проекты|projects|навыки|технические навыки|skills|языки|languages|курсы|сертификаты|certificates)\s*:?$/i;
+const EXP=/^(опыт|experience|work experience|проекты|projects)/i;
+const WEAK=/^(участвовал[аи]?|помогал[аи]?|занимал(?:ся|ась|ись)|работал[аи]?|делал[аи]?|отвечал[аи]?|принимал[аи]? участие|participated|helped|worked on|responsible for|assisted|involved in|did)(?![\p{L}])/iu;
+const METRIC=/\d+\s?%|\d[\d\s]*\s?(?:мин|сек|ч\b|час|пользовател|клиент|тыс|млн|раз|users|customers|min|sec|hours|ms|мс|k\b)|\bс\s?\d+\s?до\s?\d+|from \d+ to \d+|\d{3,}/i;
+function analyze(raw){
+ const text=raw.replace(/\r/g,''),lines=text.split('\n').map(s=>s.trim()).filter(Boolean);
+ const words=(text.match(/[\p{L}\d][\p{L}\d+#./-]*/gu)||[]).length,I=[],sk={c1:[],c2:[],c3:[],c4:[]},has={};
+ const typos=new Set();
+ TY.forEach(([w,r])=>{const m=text.match(new RegExp(w+'[\\p{L}]*','iu'));if(m)typos.add(m[0]+' → '+m[0].replace(new RegExp(w,'i'),r))});
+ const rep=text.match(/(?<![\p{L}])([\p{L}]{3,})\s+\1(?![\p{L}])/giu);if(rep)rep.slice(0,2).forEach(x=>typos.add('«'+x+'»'));
+ const cases=new Set();
+ SK.forEach(([c,n,re])=>{const g=re||new RegExp('(?<![\\p{L}\\d])'+esc(n)+'(?![\\p{L}\\d])','giu');const ms=text.match(g)||[];
+  if(ms.length){has[n]=1;sk[c].push(n);}
+  if(!re)ms.forEach(m=>{if(m!==n)cases.add(m+' → '+n)});});
+ SOFT.forEach(([n,re])=>{if(re.test(text))sk.c4.push(n)});
+ // experience items
+ let inExp=false,area=[];
+ lines.forEach(l=>{if(HEAD.test(l)){inExp=EXP.test(l);return}if(inExp)area.push(l)});
+ if(!area.length)area=lines.filter(l=>!HEAD.test(l));
+ const items=[];
+ area.forEach(l=>{const b=/^[•\-–*·▪]\s*/.test(l),t=l.replace(/^[•\-–*·▪]\s*/,'');
+  if(!b&&items.length&&/^\p{Ll}/u.test(t)&&!/[.!?;]$/.test(items[items.length-1]))items[items.length-1]+=' '+t;else items.push(t);});
+ const bullets=items.filter(t=>t.length>=30&&/[.!?;]$/.test(t));
+ const noMetric=bullets.filter(t=>!METRIC.test(t.replace(/\b(19|20)\d{2}\b/g,'')));
+ const weak=bullets.filter(t=>WEAK.test(t)).map(t=>t.match(WEAK)[0]);
+ const email=/[\w.+-]+@[\w-]+\.[\w.-]+/.test(text),phone=/\+?\d[\d\s()-]{8,}\d/.test(text),links=/github\.com|linkedin\.com|gitlab\.com/i.test(text);
+ const sec={edu:/образование|education|университет|university/i.test(text),exp:/опыт|experience|проект|project/i.test(text),skills:/навыки|skills/i.test(text)};
+ const missing=Object.keys(sec).filter(k=>!sec[k]),nsk=Object.values(sk).flat().length;
+ let pen=0;
+ if(typos.size){I.push({k:'typo',x:[...typos].slice(0,4).join('; ')});pen+=Math.min(typos.size*4,12)}
+ if(cases.size){I.push({k:'case',x:[...cases].slice(0,3).join('; ')});pen+=Math.min(cases.size*3,9)}
+ if(bullets.length&&noMetric.length/bullets.length>=.4){I.push({k:'nom',n:noMetric.length,m:bullets.length,x:'«'+noMetric[0].slice(0,60)+'…»'});pen+=Math.round(20*noMetric.length/bullets.length)}
+ if(weak.length){I.push({k:'weak',x:[...new Set(weak.map(w=>w.toLowerCase()))].slice(0,5).join(', ')});pen+=Math.min(weak.length*3,12)}
+ if(!email){I.push({k:'noemail'});pen+=10}
+ if(!phone){I.push({k:'nophone'});pen+=5}
+ if(missing.length){I.push({k:'nosec',x:missing.join(',')});pen+=missing.length*6}
+ if(words<120){I.push({k:'short',x:words});pen+=10}
+ if(nsk<5){I.push({k:'fewsk',x:nsk});pen+=8}
+ if(!links){I.push({k:'nolink'});pen+=3}
+ const city=/кокшетау|астана|алматы|караганд|шымкент|павлодар|kokshetau|astana|almaty|karaganda/i.test(text),lang=/казахск|русск|english|английск|kazakh|russian/i.test(text),eng=/\b[ABC][12]\b|ielts|toefl/i.test(text);
+ const kz=[];if(!city)kz.push('k_city');if(!links)kz.push('k_gh');if(!lang)kz.push('k_lang');kz.push('k_gen');
+ const gl=[];if(!eng)gl.push('g_eng');if(!links)gl.push('g_oss');if(words>700)gl.push('g_len');gl.push('g_pat');
+ const vac=VAC.map(([n,r])=>[n,Math.round(r.filter(s=>has[s]).length/r.length*100)]).sort((a,b)=>b[1]-a[1]).slice(0,3);
+ return{score:Math.max(0,Math.min(100,100-pen)),issues:I,skills:sk,words,kz,gl,vac,checks:{email,phone,sections:!missing.length,links,metrics:!!bullets.length&&noMetric.length/bullets.length<.4,length:words>=120&&words<=900}};}
+/*END*/
+const DEMO1=`Асель Нурланова\nСтудентка 3 курса, Software Engineering · Кокшетау, Казахстан\n+7 700 000 00 00 · asel.nurlanova@example.com · github.com/asel-demo\nО себе\nСтудентка-программист. Хочу работать в IT-компании и развиваться как backend и web разработчик. Ответственная, быстро учусь.\nОбразование\nКокшетауский университет, Software Engineering, бакалавриат, 2023 – 2027\nОпыт\nСтуденческая лаборатория, учебная пркатика · 2025\n• Участвовала в разработке веб-приложения для учета заказов на Python и Javascript.\n• Помогала команде с базой данных PostgreSQL и написанием запросов.\n• Работала в комманде из 4 человек, делала разные задачи по проекту.\nPet-проект: Telegram-бот для расписания · 2024\n• Сделала бота на Python, который показывает расписание занятий.\n• Занималась деплоем на сервер и настройкой Docker.\nНавыки\nЯзыки: Python, JavaScript, SQL, Java\nФреймворки: React, FastAPI, Django\nИнструменты: Git, Docker, Linux\nSoft skills: командная работа, презентации\nЯзыки\nКазахский — родной · Русский — свободно · English — B1`;
+const DEMO2=DEMO1.replace('Студентка-программист. Хочу работать в IT-компании и развиваться как backend и web разработчик. Ответственная, быстро учусь.','Студентка 3 курса, backend- и web-разработчик (Python, FastAPI, React). Ищу стажировку в IT-компании. Участвовала в двух проектах с реальными пользователями.').replace('пркатика','практика').replace('• Участвовала в разработке веб-приложения для учета заказов на Python и Javascript.','• Разработала веб-приложение для учёта заказов на Python и JavaScript: сократила время обработки заявки с 15 до 5 минут.').replace('• Помогала команде с базой данных PostgreSQL и написанием запросов.','• Спроектировала схему PostgreSQL из 12 таблиц и оптимизировала запросы: отчёты стали формироваться на 40% быстрее.').replace('• Работала в комманде из 4 человек, делала разные задачи по проекту.','• Организовала работу команды из 4 человек по Scrum: 95% задач спринтов выполнено в срок.').replace('• Сделала бота на Python, который показывает расписание занятий.','• Создала Telegram-бота на Python для расписания занятий: более 300 активных пользователей среди студентов.').replace('• Занималась деплоем на сервер и настройкой Docker.','• Автоматизировала деплой через Docker: время развёртывания сократилось с 30 до 5 минут.');
 AI.add({
-ru:{title:'ИИ-лаборатория анализа резюме',drop:'Перетащите резюме сюда',limits:'PDF или DOCX, до 5 МБ',choose:'Выбрать файл',demo:'Загрузить демо-шаблон студента',badfmt:'Неверный формат: нужен PDF или DOCX',big:'Файл больше 5 МБ',errs:'Критические ошибки',tree:'Дерево навыков',
- st1:'Извлечение текста',st2:'Парсинг хард-скиллов',st3:'Проверка на соответствие ATS',st4:'Сопоставление с вакансиями РК',done:'Анализ завершён',lamp:'Нужны правки',
- e1t:'Грамматика',e1:'3 опечатки в разделе «Опыт»; названия технологий написаны непоследовательно (Javascript / JavaScript).',e2t:'Нет количественных результатов',e2:'«Разработал сервис» — укажите эффект: «сократил время ответа API на 35%».',e3t:'Слабые глаголы',e3:'«Участвовал», «помогал» замените на «спроектировал», «внедрил», «оптимизировал».',
- c1:'Языки',c2:'Фреймворки',c3:'Инструменты',c4:'Soft skills',kz:'Казахстан',gl:'CIS / Global',
- k1:'Добавьте блок на казахском или русском и указывайте город/готовность к релокации.',k2:'Укажите ссылку на GitHub и проекты Технопарка.',k3:'Для банков и телекома выделите SQL, Java/Python и опыт командной работы.',
- g1:'Пишите резюме на английском, 1 страница, без фото.',g2:'Покажите вклад в open source и английский уровень (B2+).',g3:'Используйте формат «действие + метрика + результат».'},
-kk:{title:'Резюме талдайтын ЖИ-зертхана',drop:'Резюмені осында сүйреңіз',limits:'PDF немесе DOCX, 5 МБ дейін',choose:'Файлды таңдау',demo:'Студенттің демо-үлгісін жүктеу',badfmt:'Формат дұрыс емес: PDF немесе DOCX керек',big:'Файл 5 МБ-тан үлкен',errs:'Маңызды қателер',tree:'Дағдылар ағашы',
- st1:'Мәтінді шығарып алу',st2:'Hard-дағдыларды талдау',st3:'ATS сәйкестігін тексеру',st4:'ҚР вакансияларымен салыстыру',done:'Талдау аяқталды',lamp:'Түзету қажет',
- e1t:'Грамматика',e1:'«Тәжірибе» бөлімінде 3 қате; технология атаулары біркелкі емес (Javascript / JavaScript).',e2t:'Сандық нәтижелер жоқ',e2:'«Сервис жасадым» — әсерін көрсетіңіз: «API жауап уақытын 35%-ға қысқарттым».',e3t:'Әлсіз етістіктер',e3:'«Қатыстым», «көмектестім» орнына «жобаладым», «енгіздім», «оңтайландырдым» деп жазыңыз.',
- c1:'Тілдер',c2:'Фреймворктер',c3:'Құралдар',c4:'Soft skills',kz:'Қазақстан',gl:'ТМД / Global',
- k1:'Қазақша немесе орысша бөлім қосып, қала мен көшуге дайындығыңызды көрсетіңіз.',k2:'GitHub пен Технопарк жобаларына сілтеме беріңіз.',k3:'Банктер мен телеком үшін SQL, Java/Python және командалық жұмысты бөліп көрсетіңіз.',
- g1:'Резюмені ағылшынша, 1 бет, фотосыз жазыңыз.',g2:'Open source үлесі мен ағылшын деңгейін (B2+) көрсетіңіз.',g3:'«әрекет + метрика + нәтиже» форматын қолданыңыз.'},
-en:{title:'AI Resume Lab',drop:'Drag your resume here',limits:'PDF or DOCX, up to 5 MB',choose:'Choose file',demo:'Load demo student resume',badfmt:'Wrong format: PDF or DOCX required',big:'File is larger than 5 MB',errs:'Critical issues',tree:'Skill tree',
- st1:'Extracting text',st2:'Parsing hard skills',st3:'Checking ATS compatibility',st4:'Matching Kazakhstan vacancies',done:'Analysis complete',lamp:'Needs edits',
- e1t:'Grammar',e1:'3 typos in “Experience”; inconsistent tech names (Javascript / JavaScript).',e2t:'No quantified results',e2:'“Built a service” — add impact: “cut API response time by 35%”.',e3t:'Weak verbs',e3:'Replace “participated”, “helped” with “designed”, “shipped”, “optimized”.',
- c1:'Languages',c2:'Frameworks',c3:'Tools',c4:'Soft skills',kz:'Kazakhstan',gl:'CIS / Global',
- k1:'Add a Kazakh or Russian section and state your city and relocation readiness.',k2:'Link your GitHub and Technopark projects.',k3:'For banks and telecom, highlight SQL, Java/Python and teamwork.',
- g1:'Write in English, one page, no photo.',g2:'Show open-source contributions and English level (B2+).',g3:'Use the “action + metric + result” pattern.'}});
+ru:{title:'ИИ-лаборатория анализа резюме',drop:'Перетащите резюме сюда',limits:'PDF или DOCX, до 5 МБ. Файл анализируется в браузере и никуда не отправляется.',choose:'Выбрать файл',demo:'Демо-резюме с ошибками',demo2:'Демо-резюме без ошибок',badfmt:'Неверный формат: нужен PDF или DOCX',big:'Файл больше 5 МБ',notext:'В файле не найден текст. Возможно, это скан: загрузите PDF с текстовым слоем или DOCX.',liberr:'Не удалось загрузить модуль чтения файлов. Проверьте интернет.',errs:'Результаты проверки',tree:'Дерево навыков',vm:'Подходящие вакансии по найденным навыкам',
+ st1:'Извлечение текста',st2:'Парсинг хард-скиллов',st3:'Проверка на соответствие ATS',st4:'Сопоставление с вакансиями РК',done:'Анализ завершён',l_hi:'Готово к отправке',l_mid:'Нужны правки',l_lo:'Требует доработки',
+ how:'Анализ выполняется правилами в браузере: словарь опечаток, поиск навыков и метрик, проверка структуры. Это не замена проверке человеком.',
+ okt:'Критичных проблем не найдено',okd:'Резюме хорошо читается и подходит для ATS.',
+ t_typo:'Орфография и повторы',d_typo:'Найдено: {x}.',t_case:'Единообразие названий',d_case:'Технологии написаны по-разному: {x}.',t_nom:'Нет количественных результатов',d_nom:'{n} из {m} пунктов опыта без метрик, например {x}. Добавьте проценты, сроки, объёмы.',t_weak:'Слабые глаголы',d_weak:'В начале пунктов: {x}. Замените на «разработал(а)», «внедрил(а)», «оптимизировал(а)».',
+ t_noemail:'Нет e-mail',d_noemail:'Рекрутеру нужен способ связи — добавьте e-mail.',t_nophone:'Нет телефона',d_nophone:'Добавьте номер телефона.',t_nosec:'Не найдены разделы',d_nosec:'Отсутствуют: {x}.',t_short:'Слишком короткое резюме',d_short:'Всего {x} слов — расширьте опыт и проекты.',t_fewsk:'Мало навыков',d_fewsk:'Найдено навыков: {x}. Добавьте блок «Навыки» с технологиями.',t_nolink:'Нет ссылок',d_nolink:'Добавьте GitHub или LinkedIn.',
+ sec_edu:'образование',sec_exp:'опыт',sec_skills:'навыки',ck_email:'E-mail',ck_phone:'Телефон',ck_sections:'Разделы',ck_links:'Ссылки',ck_metrics:'Метрики',ck_length:'Объём',kz:'Казахстан',gl:'CIS / Global',
+ k_city:'Укажите город и готовность к релокации или удалёнке.',k_gh:'Добавьте ссылку на GitHub и проекты Технопарка.',k_lang:'Укажите владение казахским, русским и английским.',k_gen:'Для банков и телекома выделите SQL, Python/Java и командную работу.',
+ g_eng:'Укажите уровень английского (B2+).',g_oss:'Добавьте ссылку на GitHub с проектами и open source.',g_len:'Сократите резюме до одной страницы.',g_pat:'Пишите пункты в формате «действие + метрика + результат».'},
+kk:{title:'Резюме талдайтын ЖИ-зертхана',drop:'Резюмені осында сүйреңіз',limits:'PDF немесе DOCX, 5 МБ дейін. Файл браузерде талданады және ешқайда жіберілмейді.',choose:'Файлды таңдау',demo:'Қатесі бар демо-резюме',demo2:'Қатесіз демо-резюме',badfmt:'Формат дұрыс емес: PDF немесе DOCX керек',big:'Файл 5 МБ-тан үлкен',notext:'Файлдан мәтін табылмады. Бұл скан болуы мүмкін: мәтін қабаты бар PDF немесе DOCX жүктеңіз.',liberr:'Файл оқу модулі жүктелмеді. Интернетті тексеріңіз.',errs:'Тексеру нәтижелері',tree:'Дағдылар ағашы',vm:'Табылған дағдылар бойынша сәйкес вакансиялар',
+ st1:'Мәтінді шығарып алу',st2:'Hard-дағдыларды талдау',st3:'ATS сәйкестігін тексеру',st4:'ҚР вакансияларымен салыстыру',done:'Талдау аяқталды',l_hi:'Жіберуге дайын',l_mid:'Түзету қажет',l_lo:'Жетілдіру қажет',
+ how:'Талдау браузерде ережелер бойынша жүреді: қателер сөздігі, дағды мен метрика іздеу, құрылымды тексеру. Бұл адамның тексеруін алмастырмайды.',
+ okt:'Маңызды мәселе табылмады',okd:'Резюме жақсы оқылады және ATS үшін жарамды.',
+ t_typo:'Емле және қайталаулар',d_typo:'Табылды: {x}.',t_case:'Атаулардың бірізділігі',d_case:'Технологиялар әртүрлі жазылған: {x}.',t_nom:'Сандық нәтижелер жоқ',d_nom:'Тәжірибенің {m} тармағының {n}-інде метрика жоқ, мысалы {x}. Пайыз, мерзім, көлем қосыңыз.',t_weak:'Әлсіз етістіктер',d_weak:'Тармақ басында: {x}. «Жобаладым», «енгіздім», «оңтайландырдым» деп ауыстырыңыз.',
+ t_noemail:'E-mail жоқ',d_noemail:'Рекрутерге байланыс керек — e-mail қосыңыз.',t_nophone:'Телефон жоқ',d_nophone:'Телефон нөмірін қосыңыз.',t_nosec:'Бөлімдер табылмады',d_nosec:'Жоқ: {x}.',t_short:'Резюме тым қысқа',d_short:'Бар болғаны {x} сөз — тәжірибе мен жобаларды кеңейтіңіз.',t_fewsk:'Дағдылар аз',d_fewsk:'Табылған дағдылар: {x}. Технологиялар бар «Дағдылар» блогын қосыңыз.',t_nolink:'Сілтемелер жоқ',d_nolink:'GitHub немесе LinkedIn қосыңыз.',
+ sec_edu:'білім',sec_exp:'тәжірибе',sec_skills:'дағдылар',ck_email:'E-mail',ck_phone:'Телефон',ck_sections:'Бөлімдер',ck_links:'Сілтемелер',ck_metrics:'Метрикалар',ck_length:'Көлемі',kz:'Қазақстан',gl:'ТМД / Global',
+ k_city:'Қала мен көшуге немесе қашықтан жұмысқа дайындықты көрсетіңіз.',k_gh:'GitHub-ға және Технопарк жобаларына сілтеме қосыңыз.',k_lang:'Қазақ, орыс және ағылшын тілін меңгеру деңгейін көрсетіңіз.',k_gen:'Банктер мен телеком үшін SQL, Python/Java және командалық жұмысты бөліп көрсетіңіз.',
+ g_eng:'Ағылшын тілі деңгейін (B2+) көрсетіңіз.',g_oss:'Жобалар мен open source бар GitHub сілтемесін қосыңыз.',g_len:'Резюмені бір бетке дейін қысқартыңыз.',g_pat:'Тармақтарды «әрекет + метрика + нәтиже» форматында жазыңыз.'},
+en:{title:'AI Resume Lab',drop:'Drag your resume here',limits:'PDF or DOCX, up to 5 MB. The file is analyzed in your browser and never uploaded.',choose:'Choose file',demo:'Demo resume with errors',demo2:'Demo resume without errors',badfmt:'Wrong format: PDF or DOCX required',big:'File is larger than 5 MB',notext:'No text found in the file. It may be a scan: upload a PDF with a text layer or a DOCX.',liberr:'Could not load the file reader module. Check your connection.',errs:'Check results',tree:'Skill tree',vm:'Matching vacancies by detected skills',
+ st1:'Extracting text',st2:'Parsing hard skills',st3:'Checking ATS compatibility',st4:'Matching Kazakhstan vacancies',done:'Analysis complete',l_hi:'Ready to send',l_mid:'Needs edits',l_lo:'Needs rework',
+ how:'The analysis runs rule-based in your browser: typo dictionary, skill and metric detection, structure checks. It does not replace human review.',
+ okt:'No critical issues found',okd:'The resume reads well and is ATS-friendly.',
+ t_typo:'Spelling and repeats',d_typo:'Found: {x}.',t_case:'Consistent naming',d_case:'Technologies are spelled differently: {x}.',t_nom:'No quantified results',d_nom:'{n} of {m} experience bullets have no metrics, e.g. {x}. Add percentages, timeframes, volumes.',t_weak:'Weak verbs',d_weak:'Bullets start with: {x}. Use “built”, “shipped”, “optimized” instead.',
+ t_noemail:'No e-mail',d_noemail:'Recruiters need a way to reach you — add an e-mail.',t_nophone:'No phone',d_nophone:'Add a phone number.',t_nosec:'Sections not found',d_nosec:'Missing: {x}.',t_short:'Resume is too short',d_short:'Only {x} words — expand experience and projects.',t_fewsk:'Few skills',d_fewsk:'Skills detected: {x}. Add a Skills block with technologies.',t_nolink:'No links',d_nolink:'Add GitHub or LinkedIn.',
+ sec_edu:'education',sec_exp:'experience',sec_skills:'skills',ck_email:'E-mail',ck_phone:'Phone',ck_sections:'Sections',ck_links:'Links',ck_metrics:'Metrics',ck_length:'Length',kz:'Kazakhstan',gl:'CIS / Global',
+ k_city:'State your city and relocation or remote readiness.',k_gh:'Link your GitHub and Technopark projects.',k_lang:'State your Kazakh, Russian and English levels.',k_gen:'For banks and telecom, highlight SQL, Python/Java and teamwork.',
+ g_eng:'State your English level (B2+).',g_oss:'Link a GitHub with projects and open source.',g_len:'Cut the resume to one page.',g_pat:'Use the “action + metric + result” pattern.'}});
 AI.init('resume-analyzer.html');
-const $=id=>document.getElementById(id),up=$('up');let region='kz',done=false;
-const TREE=[['c1',['Python','JavaScript','SQL','Java']],['c2',['React','FastAPI','Django']],['c3',['Git','Docker','Linux']],['c4',['Teamwork','Presentation']]];
-function report(){const s=78;$('score').textContent=s;const c=s>=80?'emerald':s>=50?'amber':'rose';
- $('score').className=`font-display text-6xl my-3 text-${c}-400`;$('lamp').className=`inline-block px-3 py-1 rounded-full text-sm bg-${c}-400/15 text-${c}-300 shadow-[0_0_20px] shadow-${c}-400/40`;$('lamp').textContent='● '+AI.t('lamp');
- $('errs').innerHTML=[1,2,3].map(i=>`<li><b>${AI.t('e'+i+'t')}</b><p class="text-slate-400">${AI.t('e'+i)}</p></li>`).join('');
- $('tree').innerHTML=TREE.map(([k,a])=>`<div><div class="text-xs text-slate-400 mb-1">${AI.t(k)}</div><div class="flex flex-wrap gap-2">${a.map(x=>`<span class="chip text-cyan-200">${x}</span>`).join('')}</div></div>`).join('');
- $('tabs').innerHTML=['kz','gl'].map(r=>`<button data-r="${r}" class="chip ${r===region?'bg-indigo-500 border-indigo-500':''}">${AI.t(r)}</button>`).join('');
- $('recs').innerHTML=(region==='kz'?['k1','k2','k3']:['g1','g2','g3']).map(k=>`<li>${AI.t(k)}</li>`).join('');
- document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{region=b.dataset.r;report()});}
-function run(name){$('scan').classList.remove('hidden');$('rep').classList.add('hidden');done=false;$('fname').textContent=name;
- const L=$('steps');L.innerHTML=[1,2,3,4].map(i=>`<li class="flex gap-3 text-slate-500" id="s${i}"><i class="fa-regular fa-circle mt-1"></i>${AI.t('st'+i)}</li>`).join('');
- [1,2,3,4].forEach(i=>setTimeout(()=>{$('bar').style.width=i*25+'%';$('s'+i).className='flex gap-3 text-emerald-300';$('s'+i).firstChild.className='fa-solid fa-circle-check mt-1';
-  if(i===4){done=true;$('rep').classList.remove('hidden');report();AI.toast(AI.t('done'));}},i*900));$('bar').style.width='0';}
-function take(f){const ok=/\.(pdf|docx)$/i.test(f.name);if(!ok)return AI.toast(AI.t('badfmt'),'error');if(f.size>5*1024*1024)return AI.toast(AI.t('big'),'error');run(f.name+' ('+Math.ceil(f.size/1024)+' KB)');}
-$('pick').onclick=()=>$('file').click();$('file').onchange=e=>e.target.files[0]&&take(e.target.files[0]);
-$('demo').onclick=()=>run('demo_resume_student.pdf');
+const $=id=>document.getElementById(id),up=$('up'),sleep=ms=>new Promise(r=>setTimeout(r,ms));let region='kz',last=null;
+const TR=['c1','c2','c3','c4'],TN={c1:{ru:'Языки',kk:'Тілдер',en:'Languages'},c2:{ru:'Фреймворки',kk:'Фреймворктер',en:'Frameworks'},c3:{ru:'Инструменты',kk:'Құралдар',en:'Tools'},c4:{ru:'Soft skills',kk:'Soft skills',en:'Soft skills'}};
+const fill=(s,o)=>s.replace(/\{(\w)\}/g,(_,k)=>o[k]);
+function report(){const r=last;if(!r)return;const s=r.score,c=s>=80?'emerald':s>=50?'amber':'rose';
+ $('score').textContent=s;$('score').className=`font-display text-6xl my-3 text-${c}-400`;
+ $('lamp').className=`inline-block px-3 py-1 rounded-full text-sm bg-${c}-400/15 text-${c}-300`;$('lamp').textContent='● '+AI.t(s>=80?'l_hi':s>=50?'l_mid':'l_lo');
+ $('checks').innerHTML=Object.entries(r.checks).map(([k,v])=>`<li class="${v?'text-emerald-300':'text-rose-300'}"><i class="fa-solid ${v?'fa-check':'fa-xmark'} mr-1"></i>${AI.t('ck_'+k)}</li>`).join('');
+ $('errs').innerHTML=r.issues.length?r.issues.map(i=>{const x=i.k==='nosec'?i.x.split(',').map(k=>AI.t('sec_'+k)).join(', '):i.x;return `<li><b>${AI.t('t_'+i.k)}</b><p class="text-slate-400">${fill(AI.t('d_'+i.k),{...i,x})}</p></li>`}).join(''):`<li><b class="text-emerald-300">${AI.t('okt')}</b><p class="text-slate-400">${AI.t('okd')}</p></li>`;
+ $('tree').innerHTML=TR.map(k=>`<div><div class="text-xs text-slate-400 mb-1">${TN[k][AI.lang]}</div><div class="flex flex-wrap gap-2">${r.skills[k].map(x=>`<span class="chip text-cyan-200">${x}</span>`).join('')||'<span class="text-slate-500 text-sm">—</span>'}</div></div>`).join('');
+ $('tabs').innerHTML=['kz','gl'].map(g=>`<button data-r="${g}" class="chip ${g===region?'bg-indigo-500 border-indigo-500':''}">${AI.t(g)}</button>`).join('');
+ $('recs').innerHTML=r[region].map(k=>`<li>${AI.t(k)}</li>`).join('');
+ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{region=b.dataset.r;report()});
+ $('vac').innerHTML=r.vac.map(([n,p])=>`<a href="vacancies.html" class="rounded-xl bg-slate-900/60 border border-white/10 p-3 text-sm lift block"><div class="font-display text-xl ${p>=60?'text-emerald-400':p>=30?'text-amber-400':'text-rose-400'}">${p}%</div><div class="text-slate-300 mt-1">${n}</div></a>`).join('');}
+async function pdfText(buf){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+ const d=await pdfjsLib.getDocument({data:buf}).promise;let out='';
+ for(let i=1;i<=d.numPages;i++){const c=await(await d.getPage(i)).getTextContent();let y=null;for(const it of c.items){const yy=it.transform[5];if(y!==null&&Math.abs(yy-y)>3)out+='\n';out+=it.str;if(it.hasEOL)out+='\n';y=yy}out+='\n'}return out}
+async function docxText(buf){return(await mammoth.extractRawText({arrayBuffer:buf})).value}
+async function run(name,getText){$('scan').classList.remove('hidden');$('rep').classList.add('hidden');$('fname').textContent=name;$('bar').style.width='0';last=null;
+ $('steps').innerHTML=[1,2,3,4].map(i=>`<li class="flex gap-3 text-slate-500" id="s${i}"><i class="fa-regular fa-circle mt-1"></i>${AI.t('st'+i)}</li>`).join('');
+ let res;const p=Promise.resolve().then(getText).then(t=>{if(!t||t.replace(/\s/g,'').length<30)throw new Error('notext');return analyze(t)});p.catch(()=>{});
+ for(let i=1;i<=4;i++){await sleep(650);if(i===2){try{res=await p}catch(e){$('scan').classList.add('hidden');return AI.toast(AI.t(e.message==='notext'?'notext':'liberr'),'error')}}
+  $('bar').style.width=i*25+'%';$('s'+i).className='flex gap-3 text-emerald-300';$('s'+i).firstChild.className='fa-solid fa-circle-check mt-1';}
+ last=res;$('rep').classList.remove('hidden');report();AI.toast(AI.t('done'));}
+function take(f){if(!/\.(pdf|docx)$/i.test(f.name))return AI.toast(AI.t('badfmt'),'error');if(f.size>5*1024*1024)return AI.toast(AI.t('big'),'error');
+ run(f.name+' ('+Math.ceil(f.size/1024)+' KB)',async()=>{const b=await f.arrayBuffer();return/\.pdf$/i.test(f.name)?pdfText(b):docxText(b)})}
+$('pick').onclick=()=>$('file').click();$('file').onchange=e=>{e.target.files[0]&&take(e.target.files[0]);e.target.value=''};
+$('demo').onclick=()=>run('demo_resume_errors.pdf',()=>DEMO1);$('demo2').onclick=()=>run('demo_resume_clean.pdf',()=>DEMO2);
 ['dragover','dragenter'].forEach(e=>up.addEventListener(e,x=>{x.preventDefault();up.classList.add('border-cyan-400')}));
 ['dragleave','drop'].forEach(e=>up.addEventListener(e,x=>{x.preventDefault();up.classList.remove('border-cyan-400')}));
 up.addEventListener('drop',e=>e.dataTransfer.files[0]&&take(e.dataTransfer.files[0]));
-document.addEventListener('langchange',()=>{if(done)report();});
+document.addEventListener('langchange',report);
 </script></body></html>
